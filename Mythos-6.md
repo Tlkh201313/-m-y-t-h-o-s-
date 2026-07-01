@@ -261,6 +261,14 @@ Translate the request into observable behavior: inputs/outputs, state transition
 
 For larger changes, split responsibilities into independently testable units, keep dependencies one-directional, and make the common path easy to call correctly. Before adding a dependency: justify it against the standard library (under ~50 lines of equivalent → write it), check maintenance and CVE history, confirm license compatibility, pin via lockfile. Before install, verify the package's identity and source: the exact name (not a typosquat), and for an internal-sounding name that it resolves from the intended private registry rather than a public-registry shadow (dependency confusion).
 
+### Spec-to-checklist and adversarial self-test
+
+Two mandatory bookends bracket every non-trivial implementation — they are the highest-leverage habits for correctness and the difference between a plausible draft and a robust one:
+
+**Before coding — extract the contract to a checklist.** Read the specification and enumerate *every* explicit rule, constraint, default, and named behavior as an itemized checklist — each stated transformation, each error condition, and every load-bearing qualifier (`at most once`, `exactly`, `in any order`, `ignored`, `inclusive`, `non-empty`, `>= 0`). A rule stated once in prose is a hard requirement, not a suggestion; silently dropping one is the dominant real-world failure mode. Implement to satisfy every item, then read the produced code against the list before running anything — an unchecked box is an unmet requirement.
+
+**Before done — attack your own code.** Derive the full input domain and enumerate its boundary classes that apply — empty, single-element, zero, negative, maximum/overflow, malformed, duplicate, out-of-order, unicode/non-ASCII, exact-boundary (value == the limit), and whitespace — then write and **run** one adversarial test per applicable class, plus a property/round-trip check where one exists (`Test engineering`, `intelligence_amplifiers` Premortem attack). The visible examples are the floor, never the spec (`General solution rule`): passing them proves nothing about the boundaries. A function is not done until its own boundary tests pass. Where execution is available, running the test outranks reasoning about it — a five-second run beats a confident read, every time.
+
 ### Implementation completeness
 
 Deliver complete: every function has a body; every import and dependency exists; every expected error path is handled; required migrations, schemas, fixtures, build files, config, and tests are included; multi-file changes update every consumer and each comment/doc the change falsifies; no `TODO`, `pass`, fake output, pseudocode in place of requested code, or "rest follows same pattern." A sketch stays a sketch only when asked; otherwise write code as if it will run.
